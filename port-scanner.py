@@ -8,7 +8,7 @@ NUM_THREADS = 100
 stack_ports = []
 # Vetor com tipo de cada uma das portas começando da primeira porta da faixa e indo até o último
 # de forma ordenada crescentemente
-tipo_portas = []
+type_doors = []
 
 # OBJETIVO:
 # Desenvolver um Port Scanner simplificado que consiga categorizar as portas
@@ -16,18 +16,18 @@ tipo_portas = []
 def run():
     address = input("Hostname/Endereço IP: ").strip()
 
-    faixa_prompt = "Faixa de portas a ser analisada separando com um espaço o início e o fim dela (e.g. '20 80'): "
-    faixa = input(faixa_prompt).strip().split()
-    ini_faixa, fim_faixa = list(map(int, faixa))
-    portas = range(ini_faixa, fim_faixa + 1)
+    range_prompt = "Faixa de portas a ser analisada separando com um espaço o início e o fim dela (e.g. '20 80'): "
+    r = input(range_prompt).strip().split()
+    ini_range, end_range = list(map(int, r))
+    doors = range(ini_range, end_range + 1)
 
     # Criando pilha com número das portas para posterior acesso pelas threads
-    for porta in portas:
-        stack_ports.append(porta)
-        tipo_portas.append("")
+    for door in doors:
+        stack_ports.append(door)
+        type_doors.append("")
 
     # Definindo número de threads para que não existam mais threads do que portas a serem escaneadas
-    NUM_THREADS = (fim_faixa-ini_faixa)//2
+    NUM_THREADS = (end_range-ini_range)//2
 
     # Criando threads
     threads = []
@@ -37,7 +37,7 @@ def run():
         # Definindo daemon como True para que a thread seja encerrada automaticamente com o programa,
         # sem necessidade de encerrá-la explicitamente.
         # Passando argumentos da função scan através do parâmetro args.
-        thread = Thread(target=scan, daemon=True, args=(ini_faixa, address))
+        thread = Thread(target=scan, daemon=True, args=(ini_range, address))
 
         # Guardando threads criadas em um vetor para que possam ser manipuladas posteriormente.
         threads.append(thread)
@@ -50,50 +50,53 @@ def run():
         # apenas depois de todas as threads terminarem seus processamentos e conexões.
         t.join()
 
+    #Impressão dos números das portas e seus respectivos estados (aberta, fechada ou filtrada)
     print(f"Classe das portas do host '{address}':")
-    for port, port_type in zip(portas, tipo_portas):
-        print(f"{port} = {port_type}")
+    for door, door_type in zip(doors, type_doors):
+        print(f"{door} = {door_type}")
 
-def scan(ini_faixa, address):
-    global stack_ports, tipo_portas
+def scan(ini_range, address):
+    global stack_ports, type_doors
     
     # Por padrão, quando se cria uma instância de socket sem passar parâmetros,
     # o tipo de protocolo padrão utilizado é o protocolo TCP.
     # O argumento AF_INET indica que o socket pertence a família de protocolos internet.
     # O argumetno SOCK_STREAM se refere a socket voltado a fluxo confiável de dados que indica o TCP.
-    cliente = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    user = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     
-    # Estabelece um tempo máximo para o timeout
-    #socket.setdefaulttimeout(2)
-
     while stack_ports != []:
         # Pega número de porta a ser escaneada caso ainda exista alguma na pilha
-        porta = stack_ports.pop()
+        door = stack_ports.pop()
 
         # Se conecta ao endereço passado e retorna um código correspondente ao resultado da conexão
-        codigo = cliente.connect_ex((address, porta))
+        code = user.connect_ex((address, door))
         
         # Descobre o que fazer baseado no código retornado
-        tipo = get_port_type(codigo)
+        type = get_port_type(code)
         # Atribui tipo da porta no lugar equivalente no vetor
         # Subtração utilizada para encontrar posição correta no vetor.
-        tipo_portas[porta-ini_faixa] = tipo  
+        type_doors[door-ini_range] = type 
 
     # Fechamento do socket
-    cliente.close()   
+    user.close()   
 
-def get_port_type(codigo: int) -> str:
-    if codigo == 0:
+def get_port_type(code: int) -> str:
+    # Se o código recebido for o número 0, então a porta está aberta.
+    # Aberta == (Código 0)
+    if code == 0:
         return "aberta"
+    # Se o código recebido for diferente de 0, então a porta pode estar fechada ou filtrada.
     else:
+        # Nesses casos os códigos variam para cada Sistema operacional, então primeiramente identificamos o SO do usuário e relacionamos com o código recebido.
         so = platform.system()
-        if(so == 'Windows' and codigo == 10060) or (so == 'Linux' and codigo == 110) or (so == 'Darwin' and codigo == 60):
+        # Filtrada == host inacessível ou tentativa de conexão bloqueada por um firewall (Código 10060 windows, 110 linux, 60 macos) 
+        # A conexão expirou. Uma tentativa de conexão falhou porque a parte conectada não respondeu corretamente após um período de tempo, ou a conexão estabelecida falhou porque o host conectado não respondeu.
+        if(so == 'Windows' and code == 10060) or (so == 'Linux' and code == 110) or (so == 'Darwin' and code == 60):
           return "filtrada"
+        # Se o tipo da porta não for filtrada então consideramos que qualquer outro código de erro recebido indicará que a porta está fechada
+        # Fechada == host envia mensagem de erro.
         return "fechada"
 
-# Aberta == (Código 0)
-# Filtrada == host inacessível ou tentativa de conexão bloqueada por um firewall (Código ?) 
-# Fechada == host envia mensagem de erro (Código ?)
 
 if __name__  == "__main__":
     # PRIMEIRO PASSO:

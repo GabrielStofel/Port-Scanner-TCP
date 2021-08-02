@@ -14,6 +14,14 @@ O objetivo do trabalho é desenvolver um Port Scanner simplificado que consiga c
 
 O programa desenvolvido recebe como argumentos da linha de comando o endereço do host alvo (seja um hostname, seja diretamente o endereço IP) e uma faixa de números de porta a serem analisados (por exemplo, da porta 21 até a porta 1024). O programa varre essas portas tentando estabelecer conexões e, com base no resultado dessa tentativa, classifica cada porta da faixa. Ao final da execução, o programa lista todas as portas abertas, todas as portas filtradas e todas as portas fechadas.
 
+### Como rodar o script python
+
+Para executar o script python, basta rodar o seguinte comando na linha de comando:
+```shell
+python port-scanner.py
+```
+E depois informar o hostname/IP e faixa de porta quando requisitado pelo programa.
+
 ### Otimização do programa
 
 Para realizar a otimização do programa, em primeiro lugar, cada conexão tem um tempo máximo de *timeout* setado previamente, que é menor do que o *timeout* padrão para quando não se obtém uma resposta.

@@ -7,7 +7,7 @@ O objetivo do trabalho é desenvolver um Port Scanner simplificado que consiga c
 
 * Gabriel Stofel de Souza
 * Gabriela Pinheiro Costa
-* Karina Pereira Lemos
+* Karina Pereira de Lemos
 * Valesca Moura de Sousa
 
 ### Funcionamento do programa
